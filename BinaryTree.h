@@ -21,31 +21,14 @@ public:
         return result;
     }
 
+    template <typename Func>
+    void map(Func func) {
+        mapRecursive(root, func);
+    }
 
 
     void insert(const T& data) {
-        if (!root) {
-            root = new Node(data);
-            return;
-        }
-
-        Node* current = root;
-        Node* parent = nullptr;
-
-        while (current) {
-            parent = current;
-            if (data < current->data) {
-                current = current->left;
-            } else {
-                current = current->right;
-            }
-        }
-
-        if (data < parent->data) {
-            parent->left = new Node(data);
-        } else {
-            parent->right = new Node(data);
-        }
+        root = insertRecursive(root, data);
     }
 
     bool search(const T& data) const {
@@ -91,11 +74,94 @@ private:
         T data;
         Node* left;
         Node* right;
+        int height;
 
-        Node(const T& data) : data(data), left(nullptr), right(nullptr) {}
+        Node(const T& data) : data(data), left(nullptr), right(nullptr), height(1) {}
     };
 
     Node* root;
+
+    int height(Node* node) {
+        if (node == nullptr) {
+            return 0;
+        }
+        return node->height;
+    }
+
+    int balanceFactor(Node* node) {
+        if (node == nullptr) {
+            return 0;
+        }
+        return height(node->left) - height(node->right);
+    }
+
+    int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
+    Node* rotateRight(Node* y) {
+        Node* x = y->left;
+        Node* T2 = x->right;
+
+        x->right = y;
+        x->left = T2;
+
+        y->height = max(height(y->left), height(y->right)) + 1;
+        x->height = max(height(x->left), height(x->right)) + 1;
+
+        return x;
+    }
+
+    Node* rotateLeft(Node* x) {
+        Node* y = x->right;
+        Node* T2 = y->left;
+
+        y->left = x;
+        x->right = T2;
+
+        x->height = max(height(x->left), height(x->right)) + 1;
+        y->height = max(height(y->left), height(y->right)) + 1;
+
+        return y;
+    }
+
+
+    Node* insertRecursive(Node* node, const T& data) {
+        if (node == nullptr) {
+            return new Node(data);
+        }
+
+        if (data < node->data) {
+            node->left = insertRecursive(node->left, data);
+            return node;
+        } else if (data > node->data) {
+            node->right = insertRecursive(node->right, data);
+            return node;
+        } else {
+            return node;
+        }
+
+        node->height = 1 + max(height(node->left), height(node->right));
+
+        int balance = balanceFactor(node);
+        if (balance > 1 && data > node->right->data) {
+            return rotateLeft(node);
+        }
+        if (balance < -1 && data < node->left->data) {
+            return rotateRight(node);
+        }
+        if (balance > 1 && data < node->right->data) {
+            node->right = rotateRight(node->right);
+            return rotateLeft(node);
+        }
+        if (balance < -1 && data > node->left->data) {
+            node->left = rotateLeft(node->left);
+            return rotateRight(node);
+        }
+
+        return node; 
+    }
+
 
     template <typename R>
     R reduceInternal(Node* node, R(*func)(const R&, const T&), const R& currentValue) const {
@@ -106,7 +172,7 @@ private:
         R  newCurrent = func(currentValue, node->data);
         newCurrent = reduceInternal(node->left, func, newCurrent);
         newCurrent = reduceInternal(node->right, func, newCurrent);
-        return newCurrent;
+        return newCurrent;  
     }
 
 
@@ -126,7 +192,7 @@ private:
 
     void preOrderTraversal(Node* node, Vector<T>& result) const {
         if (node) {
-            result.append(node->data); // Из Vector.h
+            result.append(node->data);
             preOrderTraversal(node->left, result);
             preOrderTraversal(node->right, result);
         }
@@ -135,7 +201,7 @@ private:
     void inOrderTraversal(Node* node, Vector<T>& result) const {
         if (node) {
             inOrderTraversal(node->left, result);
-            result.append(node->data); // Из Vector.h
+            result.append(node->data);
             inOrderTraversal(node->right, result);
         }
     }
@@ -144,7 +210,7 @@ private:
         if (node) {
             postOrderTraversal(node->left, result);
             postOrderTraversal(node->right, result);
-            result.append(node->data); // Из Vector.h
+            result.append(node->data);
         }
     }
 
@@ -155,9 +221,20 @@ private:
         return node;
     }
 
+
+    template <typename Func>
+    void mapRecursive(Node* node, Func func) {
+        if (node != nullptr) {
+            node->data = func(node->data);
+            mapRecursive(node->left, func);
+            mapRecursive(node->right, func);
+        }
+    }
+
+
     Node* deleteNode(Node* node, const T& data) {
-        if (!node) {
-            return nullptr;
+        if (node == nullptr) {
+        return nullptr;
         }
 
         if (data < node->data) {
@@ -165,21 +242,49 @@ private:
         } else if (data > node->data) {
             node->right = deleteNode(node->right, data);
         } else { 
-            if (!node->left) {
+
+            if (node->left == nullptr) {
                 Node* temp = node->right;
                 delete node;
                 return temp;
-            } else if (!node->right) {
+            } else if (node->right == nullptr) {
                 Node* temp = node->left;
                 delete node;
                 return temp;
             }
 
-            Node* temp = findMinNode(node->right);
+            Node* temp = findMinNode(node->right); 
             node->data = temp->data;
             node->right = deleteNode(node->right, temp->data);
         }
-        return node; // Было: return Node;
+
+        if (node == nullptr) { 
+            return node; 
+        }
+
+        node->height = 1 + max(height(node->left), height(node->right));
+
+        int balance = balanceFactor(node);
+
+        if (balance > 1 && balanceFactor(node->left) >= 0) {
+            return rotateRight(node);
+        }
+
+        if (balance > 1 && balanceFactor(node->left) < 0) {
+            node->left = rotateLeft(node->left);
+            return rotateRight(node);
+        }
+
+        if (balance < -1 && balanceFactor(node->right) <= 0) {
+            return rotateLeft(node);
+        }
+
+        if (balance < -1 && balanceFactor(node->right) > 0) {
+            node->right = rotateRight(node->right);
+            return rotateLeft(node);
+        }
+
+        return node;
     }
 
     void deleteTree(Node* node) {
