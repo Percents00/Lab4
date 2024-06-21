@@ -5,6 +5,16 @@
 template <typename T>
 class BinaryTree {
 public:
+    struct Node {
+        T data;
+        Node* left;
+        Node* right;
+        int height;
+
+        Node(const T& data) : data(data), left(nullptr), right(nullptr), height(1) {}
+    };
+
+    Node* root;
     BinaryTree() : root(nullptr) {}
     ~BinaryTree() {
         deleteTree(root);
@@ -24,6 +34,17 @@ public:
     template <typename Func>
     void map(Func func) {
         mapRecursive(root, func);
+    }
+
+    BinaryTree<T> subtree(Node* subRoot) const {
+        if (!subRoot) {
+            return BinaryTree<T>();
+        }
+
+        BinaryTree<T> newTree;
+        newTree.root = copySubtree(subRoot);
+
+        return newTree;
     }
 
 
@@ -70,17 +91,6 @@ public:
     }
 
 private:
-    struct Node {
-        T data;
-        Node* left;
-        Node* right;
-        int height;
-
-        Node(const T& data) : data(data), left(nullptr), right(nullptr), height(1) {}
-    };
-
-    Node* root;
-
     int height(Node* node) {
         if (node == nullptr) {
             return 0;
@@ -93,6 +103,17 @@ private:
             return 0;
         }
         return height(node->left) - height(node->right);
+    }
+
+    Node* copySubtree(Node* node) const {
+        if (!node) {
+            return nullptr;
+        }
+        Node* newNode = new Node(node->data);
+        newNode->left = copySubtree(node->left);
+        newNode->right = copySubtree(node->right);
+        newNode->height = node->height;
+        return newNode;
     }
 
     int max(int a, int b) {
