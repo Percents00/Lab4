@@ -90,8 +90,12 @@ public:
         return result;
     }
 
+    int getTreeHeight() const {
+        return height(root);
+    }
+
 private:
-    int height(Node* node) {
+    int height(Node* node) const {
         if (node == nullptr) {
             return 0;
         }
@@ -121,11 +125,15 @@ private:
     }
 
     Node* rotateRight(Node* y) {
+        if (y == nullptr || y->left == nullptr) {
+            return y; 
+        }
         Node* x = y->left;
         Node* T2 = x->right;
 
         x->right = y;
-        x->left = T2;
+        y->left = T2;
+
 
         y->height = max(height(y->left), height(y->right)) + 1;
         x->height = max(height(x->left), height(x->right)) + 1;
@@ -134,6 +142,9 @@ private:
     }
 
     Node* rotateLeft(Node* x) {
+        if (x == nullptr || x->right == nullptr) { 
+            return x;
+        }
         Node* y = x->right;
         Node* T2 = y->left;
 
@@ -163,19 +174,21 @@ private:
         node->height = 1 + max(height(node->left), height(node->right));
 
         int balance = balanceFactor(node);
-        if (balance > 1 && data > node->right->data) {
-            return rotateLeft(node);
-        }
-        if (balance < -1 && data < node->left->data) {
+
+        if (balance > 1 && data < node->left->data) { 
+            node->left = rotateLeft(node->left);
             return rotateRight(node);
         }
-        if (balance > 1 && data < node->right->data) {
+        if (balance < -1 && data > node->right->data) {
             node->right = rotateRight(node->right);
             return rotateLeft(node);
         }
-        if (balance < -1 && data > node->left->data) {
-            node->left = rotateLeft(node->left);
+
+        if (balance > 1 && data > node->left->data) {
             return rotateRight(node);
+        }
+        if (balance < -1 && data < node->right->data) { 
+            return rotateLeft(node);
         }
 
         return node; 
