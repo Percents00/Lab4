@@ -126,7 +126,7 @@ private:
 
     void preOrderTraversal(Node* node, Vector<T>& result) const {
         if (node) {
-            result.append(node->data);
+            result.append(node->data); // Из Vector.h
             preOrderTraversal(node->left, result);
             preOrderTraversal(node->right, result);
         }
@@ -135,7 +135,7 @@ private:
     void inOrderTraversal(Node* node, Vector<T>& result) const {
         if (node) {
             inOrderTraversal(node->left, result);
-            result.append(node->data);
+            result.append(node->data); // Из Vector.h
             inOrderTraversal(node->right, result);
         }
     }
@@ -144,7 +144,7 @@ private:
         if (node) {
             postOrderTraversal(node->left, result);
             postOrderTraversal(node->right, result);
-            result.append(node->data);
+            result.append(node->data); // Из Vector.h
         }
     }
 
