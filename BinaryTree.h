@@ -154,10 +154,8 @@ private:
 
         if (data < node->data) {
             node->left = insertRecursive(node->left, data);
-            return node;
         } else if (data > node->data) {
             node->right = insertRecursive(node->right, data);
-            return node;
         } else {
             return node;
         }
